@@ -1,0 +1,18 @@
+[Unit]
+Description=ZFS Events Watcher Service
+After=network.target zfs.target
+Wants=zfs.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/usr/local/bin/zfs-watcher --pools=pool1,pool2 --interval=10 --output=/var/log/zfs-events.log
+Restart=on-failure
+RestartSec=5
+StandardOutput=syslog
+StandardError=syslog
+SyslogIdentifier=zfs-watcher
+
+[Install]
+WantedBy=multi-user.target 
