@@ -25,6 +25,9 @@ type Config struct {
 
 	// SinceEvent if set, only report events since this event command was seen
 	SinceEvent string
+
+	// ZpoolCmd specifies the path to the zpool command
+	ZpoolCmd ZpoolCommand
 }
 
 // EventHandler is a function that handles ZFS events
@@ -44,6 +47,11 @@ type Watcher struct {
 
 // New creates a new ZFS watcher
 func New(config Config) *Watcher {
+	// Set default zpool command if not specified
+	if config.ZpoolCmd == "" {
+		config.ZpoolCmd = ZpoolCmdDefault
+	}
+
 	return &Watcher{
 		config:     config,
 		lastEvents: make(map[string]time.Time),
@@ -111,7 +119,7 @@ func (w *Watcher) GetEventsSinceEvent(sinceEventCmd string) ([]models.ZFSEvent, 
 	var foundEvent bool
 
 	for _, pool := range w.config.Pools {
-		cmd := exec.Command("zpool", "history", pool)
+		cmd := exec.Command(string(w.config.ZpoolCmd), "history", pool)
 		output, err := cmd.Output()
 		if err != nil {
 			return nil, fmt.Errorf("error getting history for pool %s: %v", pool, err)
@@ -154,7 +162,7 @@ func (w *Watcher) GetEventsSinceEvent(sinceEventCmd string) ([]models.ZFSEvent, 
 func (w *Watcher) getPoolEventsSince(pool string, sinceTime time.Time) ([]models.ZFSEvent, error) {
 	var events []models.ZFSEvent
 
-	cmd := exec.Command("zpool", "history", pool)
+	cmd := exec.Command(string(w.config.ZpoolCmd), "history", pool)
 	output, err := cmd.Output()
 	if err != nil {
 		return nil, fmt.Errorf("error getting history for pool %s: %v", pool, err)
@@ -189,7 +197,7 @@ func (w *Watcher) GetRecentEvents(duration time.Duration) ([]models.ZFSEvent, er
 
 // processPoolHistory processes the history of a ZFS pool
 func (w *Watcher) processPoolHistory(pool string, initialize bool) {
-	cmd := exec.Command("zpool", "history", pool)
+	cmd := exec.Command(string(w.config.ZpoolCmd), "history", pool)
 	output, err := cmd.Output()
 	if err != nil {
 		log.Printf("Error getting history for pool %s: %v", pool, err)

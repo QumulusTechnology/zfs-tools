@@ -41,6 +41,13 @@ func main() {
 		Pools:     pools,
 		Interval:  5 * time.Second,
 		SinceTime: &lastRunTime,
+		// Use the system default zpool path (relies on PATH environment variable)
+		ZpoolCmd: watcher.ZpoolCmdDefault,
+		// Alternative paths:
+		// ZpoolCmd: watcher.ZpoolCmdUsrSbin, // /usr/sbin/zpool
+		// ZpoolCmd: watcher.ZpoolCmdSbin,    // /sbin/zpool
+		// ZpoolCmd: watcher.ZpoolCmdUsrLocalSbin, // /usr/local/sbin/zpool
+		// ZpoolCmd: watcher.ZpoolCommand("/custom/path/to/zpool"), // Custom path
 	}
 
 	// Create the watcher

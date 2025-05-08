@@ -19,6 +19,7 @@ var (
 	outputFile     string
 	outputToFile   bool
 	outputToStdout bool
+	zpoolCommand   string
 )
 
 func main() {
@@ -35,6 +36,13 @@ snapshot deletion, and volume resize events.`,
 	rootCmd.Flags().IntVarP(&interval, "interval", "i", 5, "Check interval in seconds")
 	rootCmd.Flags().StringVarP(&outputFile, "output", "o", "", "Output file (default: stdout)")
 	rootCmd.Flags().BoolVarP(&outputToStdout, "stdout", "s", true, "Output to stdout")
+	rootCmd.Flags().StringVarP(&zpoolCommand, "zpool-cmd", "z", string(watcher.ZpoolCmdDefault),
+		`Path to zpool command. Options:
+default: use system PATH
+/usr/sbin/zpool: common Linux location
+/sbin/zpool: alternative Linux location
+/usr/local/sbin/zpool: FreeBSD location
+Or provide a custom path`)
 
 	if err := rootCmd.Execute(); err != nil {
 		fmt.Println(err)
@@ -59,6 +67,21 @@ func run(cmd *cobra.Command, args []string) {
 	cfg := watcher.Config{
 		Pools:    pools,
 		Interval: time.Duration(interval) * time.Second,
+	}
+
+	// Set the zpool command path based on flag value
+	switch zpoolCommand {
+	case "default":
+		cfg.ZpoolCmd = watcher.ZpoolCmdDefault
+	case "/usr/sbin/zpool":
+		cfg.ZpoolCmd = watcher.ZpoolCmdUsrSbin
+	case "/sbin/zpool":
+		cfg.ZpoolCmd = watcher.ZpoolCmdSbin
+	case "/usr/local/sbin/zpool":
+		cfg.ZpoolCmd = watcher.ZpoolCmdUsrLocalSbin
+	default:
+		// Custom path provided
+		cfg.ZpoolCmd = watcher.ZpoolCommand(zpoolCommand)
 	}
 
 	// Create and set up watcher

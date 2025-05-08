@@ -37,6 +37,9 @@ make build
 # Output to a file in addition to stdout
 ./zfs-watcher --output events.log
 
+# Specify a custom zpool command path
+./zfs-watcher --zpool-cmd /usr/sbin/zpool
+
 # Show help
 ./zfs-watcher --help
 ```
@@ -46,6 +49,9 @@ make build
 ```bash
 # Monitor two pools with 30-second interval and log to a file
 ./zfs-watcher --pools pool1,pool2 --interval 30 --output /var/log/zfs-events.log
+
+# Use a specific zpool command path (useful for different OS distributions)
+./zfs-watcher --zpool-cmd /usr/local/sbin/zpool
 
 # Using the Makefile
 make run ARGS="--pools pool1,pool2 --interval 10 --output events.log"
@@ -99,6 +105,12 @@ import (
 cfg := watcher.Config{
     Pools:    []string{"pool1", "pool2"},
     Interval: 5 * time.Second,
+    ZpoolCmd: watcher.ZpoolCmdDefault, // Use the default path (relies on system PATH)
+    // Alternatives:
+    // ZpoolCmd: watcher.ZpoolCmdUsrSbin, // Use /usr/sbin/zpool
+    // ZpoolCmd: watcher.ZpoolCmdSbin,    // Use /sbin/zpool
+    // ZpoolCmd: watcher.ZpoolCmdUsrLocalSbin, // Use /usr/local/sbin/zpool
+    // ZpoolCmd: watcher.ZpoolCommand("/custom/path/to/zpool"), // Custom path
 }
 
 // Create the watcher
